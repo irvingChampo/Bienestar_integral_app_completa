@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "176258880086",
+    "project_id": "bienestarapp-4c018",
+    "storage_bucket": "bienestarapp-4c018.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:176258880086:android:ed62f6b77ba421f6e661f7",
+        "android_client_info": {
+          "package_name": "com.example.bienestar_integral_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "176258880086-2g04ur5jgp568mavu21hb0dthsb28h9h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.bienestar_integral_app",
+            "certificate_hash": "a7a457e9404e6d41610fe82789c2d2a8f445a2b6"
+          }
+        },
+        {
+          "client_id": "176258880086-78u4lks1pqeejvoi0bihb685fajh1e1h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJ9B_lr-KcrlC2SKZoQehVOgZgGxIe4XE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "176258880086-78u4lks1pqeejvoi0bihb685fajh1e1h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
