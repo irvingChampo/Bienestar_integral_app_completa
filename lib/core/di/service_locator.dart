@@ -1,5 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+
+// Feature Imports
 import 'package:bienestar_integral_app/features/chef_ia/data/datasource/chef_datasource.dart';
 import 'package:bienestar_integral_app/features/chef_ia/data/repository/chef_repository_impl.dart';
 import 'package:bienestar_integral_app/features/chef_ia/domain/repository/chef_repository.dart';
@@ -31,10 +33,22 @@ import 'package:bienestar_integral_app/features/events/domain/repository/event_r
 import 'package:bienestar_integral_app/features/events/domain/usecase/get_my_event_registrations.dart';
 import 'package:bienestar_integral_app/features/events/domain/usecase/unregister_from_event.dart';
 
+// --- NUEVOS IMPORTS: INGREDIENT ANALYSIS ---
+import 'package:bienestar_integral_app/features/ingredient_analysis/data/datasource/ingredient_analysis_datasource.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/data/repository/ingredient_analysis_repository_impl.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/domain/repository/ingredient_analysis_repository.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/get_analysis_dataset.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/get_ingredient_history.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/predict_ingredient_demand.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/train_clustering_model.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/recluster_model.dart';
+
 final getIt = GetIt.instance;
 
 Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton(() => http.Client());
+
+  // CHEF IA
   getIt.registerLazySingleton<ChefDatasource>(
         () => ChefDatasourceImpl(client: getIt()),
   );
@@ -44,37 +58,30 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton(() => AskChef(getIt()));
 
   // PAYMENTS
-
   getIt.registerLazySingleton<PaymentDatasource>(
         () => PaymentDatasourceImpl(client: getIt()),
   );
-
   getIt.registerLazySingleton<PaymentRepository>(
         () => PaymentRepositoryImpl(datasource: getIt()),
   );
-
   getIt.registerLazySingleton(() => CreateDonation(getIt()));
 
   // KITCHEN SCHEDULE
   getIt.registerLazySingleton<KitchenScheduleDatasource>(
         () => KitchenScheduleDatasourceImpl(client: getIt()),
   );
-
   getIt.registerLazySingleton<KitchenScheduleRepository>(
         () => KitchenScheduleRepositoryImpl(datasource: getIt()),
   );
-
   getIt.registerLazySingleton(() => CreateKitchenSchedules(getIt()));
 
   // INVENTORY y ADD PRODUCT
   getIt.registerLazySingleton<InventoryDatasource>(
         () => InventoryDatasourceImpl(client: getIt()),
   );
-
   getIt.registerLazySingleton<InventoryRepository>(
         () => InventoryRepositoryImpl(datasource: getIt()),
   );
-
   getIt.registerLazySingleton(() => GetKitchenInventory(getIt()));
   getIt.registerLazySingleton(() => ProductManagement(getIt()));
   getIt.registerLazySingleton(() => ManageProductStock(getIt()));
@@ -82,24 +89,36 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton(() => CreateCategory(getIt()));
   getIt.registerLazySingleton(() => GetUnits(getIt()));
 
+  // HOME / KITCHEN
   getIt.registerLazySingleton<KitchenDatasource>(
         () => KitchenDatasourceImpl(client: getIt()),
   );
   getIt.registerLazySingleton<KitchenRepository>(
         () => KitchenRepositoryImpl(datasource: getIt()),
   );
-
   getIt.registerLazySingleton(() => GetMyKitchenSubscriptions(getIt()));
 
+  // EVENTS
   getIt.registerLazySingleton<EventDatasource>(
         () => EventDatasourceImpl(client: getIt()),
   );
   getIt.registerLazySingleton<EventRepository>(
         () => EventRepositoryImpl(datasource: getIt()),
   );
-
   getIt.registerLazySingleton(() => GetMyEventRegistrations(getIt()));
   getIt.registerLazySingleton(() => UnregisterFromEvent(getIt()));
+
+  // --- INGREDIENT ANALYSIS (NUEVO) ---
+  getIt.registerLazySingleton<IngredientAnalysisDatasource>(
+        () => IngredientAnalysisDatasourceImpl(client: getIt()),
+  );
+  getIt.registerLazySingleton<IngredientAnalysisRepository>(
+        () => IngredientAnalysisRepositoryImpl(datasource: getIt()),
+  );
+
+  getIt.registerLazySingleton(() => GetAnalysisDataset(getIt()));
+  getIt.registerLazySingleton(() => GetIngredientHistory(getIt()));
+  getIt.registerLazySingleton(() => PredictIngredientDemand(getIt()));
+  getIt.registerLazySingleton(() => TrainClusteringModel(getIt()));
+  getIt.registerLazySingleton(() => ReclusterModel(getIt()));
 }
-
-

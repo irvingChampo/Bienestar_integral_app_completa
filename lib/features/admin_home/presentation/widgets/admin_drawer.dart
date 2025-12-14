@@ -50,6 +50,12 @@ class AdminDrawer extends StatelessWidget {
             title: 'Configuración',
             routeName: AppRoutes.settingsPath,
           ),
+          _buildDrawerItem(
+            context,
+            icon: Icons.analytics_outlined,
+            title: 'Análisis IA',
+            routeName: AppRoutes.analysisPath,
+          ),
 
           const Spacer(),
 

@@ -20,6 +20,7 @@ import 'package:bienestar_integral_app/features/register/presentation/pages/regi
 import 'package:bienestar_integral_app/features/register/presentation/pages/register_step3_screen.dart';
 import 'package:bienestar_integral_app/features/register_donation/presentation/pages/register_donation_screen.dart';
 import 'package:bienestar_integral_app/features/register_purchase/presentation/pages/register_purchase_screen.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/presentation/pages/analysis_dashboard_screen.dart';
 import 'package:bienestar_integral_app/features/settings/presentation/pages/settings_screen.dart';
 import 'package:go_router/go_router.dart';
 
@@ -65,7 +66,11 @@ class AppRouter {
         name: AppRoutes.manageVolunteers,
         builder: (c, s) => const ManageVolunteersScreen(),
       ),
-
+      GoRoute(
+          path: AppRoutes.analysisPath,
+          name: AppRoutes.analysis,
+          builder: (c, s) => const AnalysisDashboardScreen()
+      ),
       GoRoute(path: AppRoutes.launchEventPath, name: AppRoutes.launchEvent, builder: (c, s) => const LaunchEventScreen()),
       GoRoute(path: AppRoutes.addProductPath, name: AppRoutes.addProduct, builder: (c, s) => const AddProductScreen()),
       GoRoute(path: AppRoutes.inventoryPath, name: AppRoutes.inventory, builder: (c, s) => const InventoryScreen()),

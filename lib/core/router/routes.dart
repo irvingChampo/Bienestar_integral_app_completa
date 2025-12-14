@@ -20,6 +20,7 @@ class AppRoutes {
   static const String registerDonation = 'register-donation';
   static const String accountStatus = 'account-status';
   static const String chefIa = 'chef-ia';
+  static const String analysis = 'analysis';
 
   static const String loginPath = '/login';
   static const String registerStep1Path = '/register-step1';
@@ -42,4 +43,5 @@ class AppRoutes {
   static const String registerDonationPath = '/register-donation';
   static const String accountStatusPath = '/account-status';
   static const String chefIaPath = '/chef-ia';
+  static const String analysisPath = '/analysis';
 }

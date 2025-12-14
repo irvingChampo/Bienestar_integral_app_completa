@@ -44,6 +44,8 @@ dependencies:
   firebase_auth: ^4.17.8 # Versión actual (puede variar)
   google_sign_in: ^6.2.1
   get_it: ^7.6.0
+  fl_chart: ^0.66.0
+
 
 
   # The following adds the Cupertino Icons font to your application.

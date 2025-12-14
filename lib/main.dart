@@ -38,6 +38,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 
+// 5. ingredient analysis
+import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/get_analysis_dataset.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/get_ingredient_history.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/predict_ingredient_demand.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/recluster_model.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/train_clustering_model.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/presentation/providers/ingredient_analysis_provider.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
@@ -87,6 +95,15 @@ Future<void> main() async {
               getCategories: getIt<GetCategories>(),
               createCategory: getIt<CreateCategory>(),
               getUnits: getIt<GetUnits>(),
+            ),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => IngredientAnalysisProvider(
+              getDataset: getIt<GetAnalysisDataset>(),
+              trainModel: getIt<TrainClusteringModel>(),
+              reclusterModel: getIt<ReclusterModel>(),
+              predictDemand: getIt<PredictIngredientDemand>(),
+              getHistory: getIt<GetIngredientHistory>(),
             ),
           ),
           // Chef IA Feature
