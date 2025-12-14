@@ -8,17 +8,15 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class IngredientAnalysisDatasource {
-  Future<String> trainModel();
+  Future<String> trainModel(int kitchenId);
   Future<PredictionResultModel> predict(Map<String, dynamic> data);
-  Future<String> recluster();
-  Future<DatasetSummaryModel> getDataset();
-  Future<IngredientHistoryModel> getHistory(String ingrediente);
+  Future<String> recluster(int kitchenId);
+  Future<DatasetSummaryModel> getDataset(int kitchenId);
+  Future<IngredientHistoryModel> getHistory(int kitchenId, String ingrediente);
 }
 
 class IngredientAnalysisDatasourceImpl implements IngredientAnalysisDatasource {
   final http.Client client;
-
-  // Obtenemos la URL específica de clustering del .env
   final String? _clusterApiUrl = dotenv.env['CLUSTER_API_URL'];
 
   IngredientAnalysisDatasourceImpl({required this.client});
@@ -43,13 +41,15 @@ class IngredientAnalysisDatasourceImpl implements IngredientAnalysisDatasource {
   }
 
   @override
-  Future<String> trainModel() async {
+  Future<String> trainModel(int kitchenId) async {
     final url = Uri.parse(_getUrl('/train'));
     try {
-      final response = await client.post(url, headers: await _getHeaders());
+      final body = json.encode({'kitchen_id': kitchenId});
+      final response = await client.post(url, headers: await _getHeaders(), body: body);
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final jsonResponse = json.decode(response.body);
-        return jsonResponse['status'] ?? 'Entrenado';
+        return jsonResponse['status'] ?? 'Entrenado exitosamente';
       }
       throw ServerException('Error al entrenar modelo: ${response.statusCode}');
     } catch (e) {
@@ -62,6 +62,7 @@ class IngredientAnalysisDatasourceImpl implements IngredientAnalysisDatasource {
   Future<PredictionResultModel> predict(Map<String, dynamic> data) async {
     final url = Uri.parse(_getUrl('/predict'));
     try {
+      // El kitchen_id ya debe venir dentro del mapa 'data' desde el provider
       final response = await client.post(
         url,
         headers: await _getHeaders(),
@@ -78,13 +79,13 @@ class IngredientAnalysisDatasourceImpl implements IngredientAnalysisDatasource {
   }
 
   @override
-  Future<String> recluster() async {
-    final url = Uri.parse(_getUrl('/recluster'));
+  Future<String> recluster(int kitchenId) async {
+    final url = Uri.parse(_getUrl('/recluster?kitchen_id=$kitchenId'));
     try {
       final response = await client.get(url, headers: await _getHeaders());
       if (response.statusCode == 200) {
         final jsonResponse = json.decode(response.body);
-        return jsonResponse['status'] ?? 'Re-clusterizado';
+        return jsonResponse['status'] ?? 'Re-clusterizado exitosamente';
       }
       throw ServerException('Error al re-clusterizar');
     } catch (e) {
@@ -94,8 +95,8 @@ class IngredientAnalysisDatasourceImpl implements IngredientAnalysisDatasource {
   }
 
   @override
-  Future<DatasetSummaryModel> getDataset() async {
-    final url = Uri.parse(_getUrl('/dataset'));
+  Future<DatasetSummaryModel> getDataset(int kitchenId) async {
+    final url = Uri.parse(_getUrl('/dataset?kitchen_id=$kitchenId'));
     try {
       final response = await client.get(url, headers: await _getHeaders());
       if (response.statusCode == 200) {
@@ -109,9 +110,10 @@ class IngredientAnalysisDatasourceImpl implements IngredientAnalysisDatasource {
   }
 
   @override
-  Future<IngredientHistoryModel> getHistory(String ingrediente) async {
+  Future<IngredientHistoryModel> getHistory(int kitchenId, String ingrediente) async {
     final encodedName = Uri.encodeComponent(ingrediente);
-    final url = Uri.parse(_getUrl('/evolucion/ingrediente/$encodedName'));
+    // Se agrega kitchen_id como query param para filtrar historial por cocina
+    final url = Uri.parse(_getUrl('/evolucion/ingrediente/$encodedName?kitchen_id=$kitchenId'));
     try {
       final response = await client.get(url, headers: await _getHeaders());
       if (response.statusCode == 200) {

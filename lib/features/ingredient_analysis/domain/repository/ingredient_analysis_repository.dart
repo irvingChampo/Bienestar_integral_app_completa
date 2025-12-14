@@ -3,9 +3,9 @@ import 'package:bienestar_integral_app/features/ingredient_analysis/domain/entit
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/entities/prediction_result.dart';
 
 abstract class IngredientAnalysisRepository {
-  Future<String> trainModel();
+  Future<String> trainModel(int kitchenId);
   Future<PredictionResult> predict(Map<String, dynamic> data);
-  Future<String> recluster();
-  Future<DatasetSummary> getDataset();
-  Future<IngredientHistory> getHistory(String ingrediente);
+  Future<String> recluster(int kitchenId);
+  Future<DatasetSummary> getDataset(int kitchenId);
+  Future<IngredientHistory> getHistory(int kitchenId, String ingrediente);
 }

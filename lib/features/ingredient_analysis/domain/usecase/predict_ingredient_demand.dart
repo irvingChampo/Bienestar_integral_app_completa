@@ -3,7 +3,6 @@ import 'package:bienestar_integral_app/features/ingredient_analysis/domain/repos
 
 class PredictIngredientDemand {
   final IngredientAnalysisRepository repository;
-
   PredictIngredientDemand(this.repository);
 
   Future<PredictionResult> call(Map<String, dynamic> data) async {

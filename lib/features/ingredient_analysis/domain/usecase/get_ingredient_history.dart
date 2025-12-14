@@ -3,10 +3,9 @@ import 'package:bienestar_integral_app/features/ingredient_analysis/domain/repos
 
 class GetIngredientHistory {
   final IngredientAnalysisRepository repository;
-
   GetIngredientHistory(this.repository);
 
-  Future<IngredientHistory> call(String ingrediente) async {
-    return await repository.getHistory(ingrediente);
+  Future<IngredientHistory> call(int kitchenId, String ingrediente) async {
+    return await repository.getHistory(kitchenId, ingrediente);
   }
 }

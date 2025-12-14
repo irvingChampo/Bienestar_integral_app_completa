@@ -10,13 +10,13 @@ class IngredientAnalysisRepositoryImpl implements IngredientAnalysisRepository {
   IngredientAnalysisRepositoryImpl({required this.datasource});
 
   @override
-  Future<DatasetSummary> getDataset() async {
-    return await datasource.getDataset();
+  Future<DatasetSummary> getDataset(int kitchenId) async {
+    return await datasource.getDataset(kitchenId);
   }
 
   @override
-  Future<IngredientHistory> getHistory(String ingrediente) async {
-    return await datasource.getHistory(ingrediente);
+  Future<IngredientHistory> getHistory(int kitchenId, String ingrediente) async {
+    return await datasource.getHistory(kitchenId, ingrediente);
   }
 
   @override
@@ -25,12 +25,12 @@ class IngredientAnalysisRepositoryImpl implements IngredientAnalysisRepository {
   }
 
   @override
-  Future<String> recluster() async {
-    return await datasource.recluster();
+  Future<String> recluster(int kitchenId) async {
+    return await datasource.recluster(kitchenId);
   }
 
   @override
-  Future<String> trainModel() async {
-    return await datasource.trainModel();
+  Future<String> trainModel(int kitchenId) async {
+    return await datasource.trainModel(kitchenId);
   }
 }

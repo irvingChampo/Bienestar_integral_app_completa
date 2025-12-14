@@ -1,3 +1,4 @@
+import 'package:bienestar_integral_app/features/admin_home/presentation/providers/admin_home_provider.dart';
 import 'package:bienestar_integral_app/features/auth/presentation/widgets/custom_button.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/presentation/providers/ingredient_analysis_provider.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/presentation/widgets/history_line_chart.dart';
@@ -21,7 +22,11 @@ class _AnalysisDashboardScreenState extends State<AnalysisDashboardScreen> with 
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<IngredientAnalysisProvider>().loadDataset();
+      // Cargamos dataset inicial
+      final kitchenId = context.read<AdminHomeProvider>().kitchen?.id;
+      if (kitchenId != null) {
+        context.read<IngredientAnalysisProvider>().loadDataset(kitchenId);
+      }
     });
   }
 
@@ -36,7 +41,6 @@ class _AnalysisDashboardScreenState extends State<AnalysisDashboardScreen> with 
     final colors = Theme.of(context).colorScheme;
     final provider = context.watch<IngredientAnalysisProvider>();
 
-    // Manejo de mensajes (Snackbars)
     if (provider.errorMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -82,7 +86,7 @@ class _AnalysisDashboardScreenState extends State<AnalysisDashboardScreen> with 
   }
 }
 
-// --- VISTA 1: GENERAL (DATASET & ACCIONES) ---
+// VISTA 1: GENERAL
 class _GeneralView extends StatelessWidget {
   final IngredientAnalysisProvider provider;
   const _GeneralView({required this.provider});
@@ -91,6 +95,7 @@ class _GeneralView extends StatelessWidget {
   Widget build(BuildContext context) {
     final summary = provider.datasetSummary;
     final isLoading = provider.status == AnalysisStatus.loading;
+    final kitchenId = context.read<AdminHomeProvider>().kitchen?.id;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -105,7 +110,6 @@ class _GeneralView extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Tarjeta de Estado
           Card(
             elevation: 2,
             child: Padding(
@@ -140,7 +144,7 @@ class _GeneralView extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: isLoading ? null : () => provider.train(),
+                  onPressed: (isLoading || kitchenId == null) ? null : () => provider.train(kitchenId),
                   icon: const Icon(Icons.model_training),
                   label: const Text("Entrenar"),
                   style: ElevatedButton.styleFrom(
@@ -152,7 +156,7 @@ class _GeneralView extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: isLoading ? null : () => provider.recluster(),
+                  onPressed: (isLoading || kitchenId == null) ? null : () => provider.recluster(kitchenId),
                   icon: const Icon(Icons.refresh),
                   label: const Text("Re-Clusterizar"),
                   style: ElevatedButton.styleFrom(
@@ -194,7 +198,7 @@ class _GeneralView extends StatelessWidget {
   }
 }
 
-// --- VISTA 2: PREDICCIÓN ---
+// VISTA 2: PREDICCIÓN
 class _PredictionView extends StatefulWidget {
   final IngredientAnalysisProvider provider;
   const _PredictionView({required this.provider});
@@ -205,8 +209,6 @@ class _PredictionView extends StatefulWidget {
 
 class _PredictionViewState extends State<_PredictionView> {
   final _formKey = GlobalKey<FormState>();
-
-  // Controllers
   final _ingredienteCtrl = TextEditingController();
   final _categoriaIdCtrl = TextEditingController();
   final _unidadCtrl = TextEditingController();
@@ -216,8 +218,15 @@ class _PredictionViewState extends State<_PredictionView> {
   final _diasCtrl = TextEditingController();
 
   void _submit() {
+    final kitchenId = context.read<AdminHomeProvider>().kitchen?.id;
+    if (kitchenId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error: No se encontró ID de cocina")));
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       widget.provider.predict(
+        kitchenId: kitchenId,
         ingrediente: _ingredienteCtrl.text,
         categoriaId: int.parse(_categoriaIdCtrl.text),
         unidadMedida: _unidadCtrl.text,
@@ -302,7 +311,7 @@ class _PredictionViewState extends State<_PredictionView> {
   }
 }
 
-// --- VISTA 3: EVOLUCIÓN HISTÓRICA ---
+// VISTA 3: EVOLUCIÓN HISTÓRICA
 class _HistoryView extends StatefulWidget {
   final IngredientAnalysisProvider provider;
   const _HistoryView({required this.provider});
@@ -313,6 +322,19 @@ class _HistoryView extends StatefulWidget {
 
 class _HistoryViewState extends State<_HistoryView> {
   final _searchCtrl = TextEditingController();
+
+  void _search() {
+    final val = _searchCtrl.text.trim();
+    final kitchenId = context.read<AdminHomeProvider>().kitchen?.id;
+
+    if (kitchenId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error: No se encontró ID de cocina")));
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+    widget.provider.fetchHistory(kitchenId, val);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -329,15 +351,12 @@ class _HistoryViewState extends State<_HistoryView> {
               hintText: "Buscar ingrediente (Ej. Arroz)",
               suffixIcon: IconButton(
                 icon: const Icon(Icons.search),
-                onPressed: () {
-                  FocusScope.of(context).unfocus();
-                  widget.provider.fetchHistory(_searchCtrl.text.trim());
-                },
+                onPressed: _search,
               ),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               filled: true,
             ),
-            onSubmitted: (val) => widget.provider.fetchHistory(val.trim()),
+            onSubmitted: (_) => _search(),
           ),
           const SizedBox(height: 24),
 

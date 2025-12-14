@@ -22,7 +22,6 @@ class IngredientAnalysisProvider extends ChangeNotifier {
   String? _errorMessage;
   String? _successMessage;
 
-  // Data
   DatasetSummary? _datasetSummary;
   PredictionResult? _predictionResult;
   IngredientHistory? _history;
@@ -46,12 +45,12 @@ class IngredientAnalysisProvider extends ChangeNotifier {
   PredictionResult? get predictionResult => _predictionResult;
   IngredientHistory? get history => _history;
 
-  // Cargar Dataset (Vista General)
-  Future<void> loadDataset() async {
+  // Cargar Dataset
+  Future<void> loadDataset(int kitchenId) async {
     _status = AnalysisStatus.loading;
     notifyListeners();
     try {
-      _datasetSummary = await _getDataset();
+      _datasetSummary = await _getDataset(kitchenId);
       _status = AnalysisStatus.success;
     } catch (e) {
       _errorMessage = _mapFailureToMessage(e);
@@ -61,14 +60,13 @@ class IngredientAnalysisProvider extends ChangeNotifier {
   }
 
   // Entrenar Modelo
-  Future<void> train() async {
+  Future<void> train(int kitchenId) async {
     _status = AnalysisStatus.loading;
     notifyListeners();
     try {
-      final msg = await _trainModel();
+      final msg = await _trainModel(kitchenId);
       _successMessage = "Modelo entrenado: $msg";
-      // Recargar dataset actualizado
-      _datasetSummary = await _getDataset();
+      await loadDataset(kitchenId); // Recargar
       _status = AnalysisStatus.success;
     } catch (e) {
       _errorMessage = _mapFailureToMessage(e);
@@ -78,13 +76,13 @@ class IngredientAnalysisProvider extends ChangeNotifier {
   }
 
   // Re-clusterizar
-  Future<void> recluster() async {
+  Future<void> recluster(int kitchenId) async {
     _status = AnalysisStatus.loading;
     notifyListeners();
     try {
-      final msg = await _reclusterModel();
+      final msg = await _reclusterModel(kitchenId);
       _successMessage = "Re-clusterización exitosa: $msg";
-      _datasetSummary = await _getDataset();
+      await loadDataset(kitchenId); // Recargar
       _status = AnalysisStatus.success;
     } catch (e) {
       _errorMessage = _mapFailureToMessage(e);
@@ -95,6 +93,7 @@ class IngredientAnalysisProvider extends ChangeNotifier {
 
   // Predecir
   Future<void> predict({
+    required int kitchenId,
     required String ingrediente,
     required int categoriaId,
     required String unidadMedida,
@@ -107,6 +106,7 @@ class IngredientAnalysisProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final input = {
+        "kitchen_id": kitchenId, // ID AGREGADO
         "ingrediente": ingrediente,
         "categoria_id": categoriaId,
         "unidad_medida": unidadMedida,
@@ -124,13 +124,13 @@ class IngredientAnalysisProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Obtener Historial para Gráfica
-  Future<void> fetchHistory(String ingredientName) async {
+  // Obtener Historial
+  Future<void> fetchHistory(int kitchenId, String ingredientName) async {
     if (ingredientName.isEmpty) return;
     _status = AnalysisStatus.loading;
     notifyListeners();
     try {
-      _history = await _getHistory(ingredientName);
+      _history = await _getHistory(kitchenId, ingredientName);
       _status = AnalysisStatus.success;
     } catch (e) {
       _errorMessage = _mapFailureToMessage(e);

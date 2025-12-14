@@ -3,10 +3,9 @@ import 'package:bienestar_integral_app/features/ingredient_analysis/domain/repos
 
 class GetAnalysisDataset {
   final IngredientAnalysisRepository repository;
-
   GetAnalysisDataset(this.repository);
 
-  Future<DatasetSummary> call() async {
-    return await repository.getDataset();
+  Future<DatasetSummary> call(int kitchenId) async {
+    return await repository.getDataset(kitchenId);
   }
 }

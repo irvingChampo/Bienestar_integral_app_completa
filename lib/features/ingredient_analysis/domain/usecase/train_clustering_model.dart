@@ -2,10 +2,9 @@ import 'package:bienestar_integral_app/features/ingredient_analysis/domain/repos
 
 class TrainClusteringModel {
   final IngredientAnalysisRepository repository;
-
   TrainClusteringModel(this.repository);
 
-  Future<String> call() async {
-    return await repository.trainModel();
+  Future<String> call(int kitchenId) async {
+    return await repository.trainModel(kitchenId);
   }
 }
