@@ -20,14 +20,7 @@ class _AnalysisDashboardScreenState extends State<AnalysisDashboardScreen> with 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Cargamos dataset inicial
-      final kitchenId = context.read<AdminHomeProvider>().kitchen?.id;
-      if (kitchenId != null) {
-        context.read<IngredientAnalysisProvider>().loadDataset(kitchenId);
-      }
-    });
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -49,14 +42,6 @@ class _AnalysisDashboardScreenState extends State<AnalysisDashboardScreen> with 
         provider.clearMessages();
       });
     }
-    if (provider.successMessage != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(provider.successMessage!), backgroundColor: Colors.green),
-        );
-        provider.clearMessages();
-      });
-    }
 
     return Scaffold(
       appBar: HomeAppBar(
@@ -68,7 +53,6 @@ class _AnalysisDashboardScreenState extends State<AnalysisDashboardScreen> with 
           unselectedLabelColor: colors.onPrimary.withOpacity(0.6),
           indicatorColor: colors.onPrimary,
           tabs: const [
-            Tab(text: 'General'),
             Tab(text: 'Predicción'),
             Tab(text: 'Evolución'),
           ],
@@ -77,7 +61,6 @@ class _AnalysisDashboardScreenState extends State<AnalysisDashboardScreen> with 
       body: TabBarView(
         controller: _tabController,
         children: [
-          _GeneralView(provider: provider),
           _PredictionView(provider: provider),
           _HistoryView(provider: provider),
         ],
@@ -86,119 +69,7 @@ class _AnalysisDashboardScreenState extends State<AnalysisDashboardScreen> with 
   }
 }
 
-// VISTA 1: GENERAL
-class _GeneralView extends StatelessWidget {
-  final IngredientAnalysisProvider provider;
-  const _GeneralView({required this.provider});
-
-  @override
-  Widget build(BuildContext context) {
-    final summary = provider.datasetSummary;
-    final isLoading = provider.status == AnalysisStatus.loading;
-    final kitchenId = context.read<AdminHomeProvider>().kitchen?.id;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Panel de Control del Modelo", style: Theme.of(context).textTheme.headlineSmall),
-          const SizedBox(height: 10),
-          Text(
-            "Administra el modelo de clustering para la predicción de demanda de ingredientes.",
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 24),
-
-          Card(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text("Dataset Actual", style: TextStyle(fontWeight: FontWeight.bold)),
-                      if (isLoading) const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    ],
-                  ),
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.data_usage),
-                    title: const Text("Elementos procesados"),
-                    trailing: Text(
-                      summary?.nItems.toString() ?? "0",
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          Text("Acciones", style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: (isLoading || kitchenId == null) ? null : () => provider.train(kitchenId),
-                  icon: const Icon(Icons.model_training),
-                  label: const Text("Entrenar"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: (isLoading || kitchenId == null) ? null : () => provider.recluster(kitchenId),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text("Re-Clusterizar"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orangeAccent,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          if (summary != null && summary.sample.isNotEmpty) ...[
-            Text("Muestra del Dataset", style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: summary.sample.length > 5 ? 5 : summary.sample.length,
-              itemBuilder: (context, index) {
-                final item = summary.sample[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    title: Text(item.ingrediente),
-                    subtitle: Text("Compras: ${item.cantidadCompras} | Recompra: ${item.tasaRecompra}"),
-                    trailing: CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                      child: Text("${item.cluster}"),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-// VISTA 2: PREDICCIÓN
+// --- VISTA 1: PREDICCIÓN ---
 class _PredictionView extends StatefulWidget {
   final IngredientAnalysisProvider provider;
   const _PredictionView({required this.provider});
@@ -209,32 +80,48 @@ class _PredictionView extends StatefulWidget {
 
 class _PredictionViewState extends State<_PredictionView> {
   final _formKey = GlobalKey<FormState>();
-  final _ingredienteCtrl = TextEditingController();
-  final _categoriaIdCtrl = TextEditingController();
-  final _unidadCtrl = TextEditingController();
-  final _cantidadUnidadCtrl = TextEditingController();
-  final _comprasCtrl = TextEditingController();
-  final _tasaCtrl = TextEditingController();
-  final _diasCtrl = TextEditingController();
+
+  // Controllers
+  final _ingredienteCtrl = TextEditingController(text: "Tomate");
+  final _categoriaIdCtrl = TextEditingController(text: "4");
+  final _unidadCtrl = TextEditingController(text: "kilogramos");
+  final _cantidadUnidadCtrl = TextEditingController(text: "1.0");
+  final _comprasCtrl = TextEditingController(text: "10");
+  final _tasaCtrl = TextEditingController(text: "0.5");
+  final _diasCtrl = TextEditingController(text: "7");
 
   void _submit() {
+    // 1. Obtener ID de Cocina
     final kitchenId = context.read<AdminHomeProvider>().kitchen?.id;
+
     if (kitchenId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error: No se encontró ID de cocina")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error: No se encontró ID de cocina. Recarga la app.")));
       return;
     }
 
     if (_formKey.currentState!.validate()) {
-      widget.provider.predict(
-        kitchenId: kitchenId,
-        ingrediente: _ingredienteCtrl.text,
-        categoriaId: int.parse(_categoriaIdCtrl.text),
-        unidadMedida: _unidadCtrl.text,
-        cantidadUnidad: double.parse(_cantidadUnidadCtrl.text),
-        cantidadCompras: int.parse(_comprasCtrl.text),
-        tasaRecompra: double.parse(_tasaCtrl.text),
-        diasPromedio: int.parse(_diasCtrl.text),
-      );
+      // 2. Conversión Segura de Datos
+      try {
+        final catId = int.parse(_categoriaIdCtrl.text.trim());
+        final cantUni = double.parse(_cantidadUnidadCtrl.text.trim());
+        final cantCompras = int.parse(_comprasCtrl.text.trim());
+        final tasa = double.parse(_tasaCtrl.text.trim());
+        final dias = int.parse(_diasCtrl.text.trim());
+
+        // 3. Llamada al Provider
+        widget.provider.predict(
+          kitchenId: kitchenId,
+          ingrediente: _ingredienteCtrl.text.trim(),
+          categoriaId: catId,
+          unidadMedida: _unidadCtrl.text.trim(),
+          cantidadUnidad: cantUni,
+          cantidadCompras: cantCompras,
+          tasaRecompra: tasa,
+          diasPromedio: dias,
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error en el formato de los números: $e")));
+      }
     }
   }
 
@@ -272,11 +159,14 @@ class _PredictionViewState extends State<_PredictionView> {
               const SizedBox(height: 24),
             ],
 
+            Text("Calcular Prioridad", style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 16),
+
             AdminTextField(label: "Ingrediente", controller: _ingredienteCtrl, hint: "Ej. Tomate"),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: AdminTextField(label: "Cat ID", controller: _categoriaIdCtrl, keyboardType: TextInputType.number)),
+                Expanded(child: AdminTextField(label: "Cat ID (Entero)", controller: _categoriaIdCtrl, keyboardType: TextInputType.number)),
                 const SizedBox(width: 10),
                 Expanded(child: AdminTextField(label: "Unidad", controller: _unidadCtrl, hint: "kg, lt")),
               ],
@@ -286,15 +176,15 @@ class _PredictionViewState extends State<_PredictionView> {
               children: [
                 Expanded(child: AdminTextField(label: "Cant. x Unidad", controller: _cantidadUnidadCtrl, keyboardType: TextInputType.number)),
                 const SizedBox(width: 10),
-                Expanded(child: AdminTextField(label: "Compras Totales", controller: _comprasCtrl, keyboardType: TextInputType.number)),
+                Expanded(child: AdminTextField(label: "Compras (Entero)", controller: _comprasCtrl, keyboardType: TextInputType.number)),
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: AdminTextField(label: "Tasa Recompra (0-1)", controller: _tasaCtrl, keyboardType: TextInputType.number)),
+                Expanded(child: AdminTextField(label: "Tasa Recompra (0.0-1.0)", controller: _tasaCtrl, keyboardType: TextInputType.number)),
                 const SizedBox(width: 10),
-                Expanded(child: AdminTextField(label: "Días Promedio", controller: _diasCtrl, keyboardType: TextInputType.number)),
+                Expanded(child: AdminTextField(label: "Días Promedio (Entero)", controller: _diasCtrl, keyboardType: TextInputType.number)),
               ],
             ),
             const SizedBox(height: 30),
@@ -311,7 +201,7 @@ class _PredictionViewState extends State<_PredictionView> {
   }
 }
 
-// VISTA 3: EVOLUCIÓN HISTÓRICA
+// --- VISTA 2: EVOLUCIÓN HISTÓRICA ---
 class _HistoryView extends StatefulWidget {
   final IngredientAnalysisProvider provider;
   const _HistoryView({required this.provider});

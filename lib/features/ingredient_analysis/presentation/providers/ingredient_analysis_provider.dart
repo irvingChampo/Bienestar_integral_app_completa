@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 enum AnalysisStatus { initial, loading, success, error }
 
 class IngredientAnalysisProvider extends ChangeNotifier {
+  // Mantenemos las referencias aunque no las usemos todas, para no romper el main.dart
   final GetAnalysisDataset _getDataset;
   final TrainClusteringModel _trainModel;
   final ReclusterModel _reclusterModel;
@@ -22,9 +23,12 @@ class IngredientAnalysisProvider extends ChangeNotifier {
   String? _errorMessage;
   String? _successMessage;
 
-  DatasetSummary? _datasetSummary;
+  // Solo conservamos las variables que usaremos
   PredictionResult? _predictionResult;
   IngredientHistory? _history;
+
+  // DatasetSummary lo dejamos nulo siempre, ya no lo usamos
+  DatasetSummary? get datasetSummary => null;
 
   IngredientAnalysisProvider({
     required GetAnalysisDataset getDataset,
@@ -41,57 +45,13 @@ class IngredientAnalysisProvider extends ChangeNotifier {
   AnalysisStatus get status => _status;
   String? get errorMessage => _errorMessage;
   String? get successMessage => _successMessage;
-  DatasetSummary? get datasetSummary => _datasetSummary;
+
   PredictionResult? get predictionResult => _predictionResult;
   IngredientHistory? get history => _history;
 
-  // Cargar Dataset
-  Future<void> loadDataset(int kitchenId) async {
-    _status = AnalysisStatus.loading;
-    notifyListeners();
-    try {
-      _datasetSummary = await _getDataset(kitchenId);
-      _status = AnalysisStatus.success;
-    } catch (e) {
-      _errorMessage = _mapFailureToMessage(e);
-      _status = AnalysisStatus.error;
-    }
-    notifyListeners();
-  }
+  // --- MÉTODOS ACTIVOS ---
 
-  // Entrenar Modelo
-  Future<void> train(int kitchenId) async {
-    _status = AnalysisStatus.loading;
-    notifyListeners();
-    try {
-      final msg = await _trainModel(kitchenId);
-      _successMessage = "Modelo entrenado: $msg";
-      await loadDataset(kitchenId); // Recargar
-      _status = AnalysisStatus.success;
-    } catch (e) {
-      _errorMessage = _mapFailureToMessage(e);
-      _status = AnalysisStatus.error;
-    }
-    notifyListeners();
-  }
-
-  // Re-clusterizar
-  Future<void> recluster(int kitchenId) async {
-    _status = AnalysisStatus.loading;
-    notifyListeners();
-    try {
-      final msg = await _reclusterModel(kitchenId);
-      _successMessage = "Re-clusterización exitosa: $msg";
-      await loadDataset(kitchenId); // Recargar
-      _status = AnalysisStatus.success;
-    } catch (e) {
-      _errorMessage = _mapFailureToMessage(e);
-      _status = AnalysisStatus.error;
-    }
-    notifyListeners();
-  }
-
-  // Predecir
+  // 1. Predecir
   Future<void> predict({
     required int kitchenId,
     required String ingrediente,
@@ -106,7 +66,7 @@ class IngredientAnalysisProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final input = {
-        "kitchen_id": kitchenId, // ID AGREGADO
+        "kitchen_id": kitchenId, // ID CRUCIAL PARA EL BACKEND
         "ingrediente": ingrediente,
         "categoria_id": categoriaId,
         "unidad_medida": unidadMedida,
@@ -124,7 +84,7 @@ class IngredientAnalysisProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Obtener Historial
+  // 2. Obtener Historial
   Future<void> fetchHistory(int kitchenId, String ingredientName) async {
     if (ingredientName.isEmpty) return;
     _status = AnalysisStatus.loading;
