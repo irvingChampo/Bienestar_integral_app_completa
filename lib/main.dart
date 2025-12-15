@@ -1,7 +1,7 @@
 import 'package:bienestar_integral_app/core/application/app_state.dart';
 import 'package:bienestar_integral_app/core/application/theme_provider.dart';
 import 'package:bienestar_integral_app/core/di/service_locator.dart';
-// Providers "Normales" (No migrados aún)
+// Providers "Normales" (No migrados completamente a DI constructor puro, pero aceptan dependencias)
 import 'package:bienestar_integral_app/features/account_status/presentation/providers/account_status_provider.dart';
 import 'package:bienestar_integral_app/features/admin_home/presentation/providers/admin_events_provider.dart';
 import 'package:bienestar_integral_app/features/admin_home/presentation/providers/admin_home_provider.dart';
@@ -38,13 +38,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 
-// 5. ingredient analysis
+// 5. Ingredient Analysis
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/get_analysis_dataset.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/get_ingredient_history.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/predict_ingredient_demand.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/recluster_model.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/train_clustering_model.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/presentation/providers/ingredient_analysis_provider.dart';
+
+// 6. Toxicity (Validación de texto)
+import 'package:bienestar_integral_app/features/toxicity/domain/usecase/validate_text.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,8 +73,14 @@ Future<void> main() async {
           ChangeNotifierProvider(create: (_) => EventDetailsProvider()),
           ChangeNotifierProvider(create: (_) => EventsProvider()),
           ChangeNotifierProvider(create: (_) => AdminHomeProvider()),
-          ChangeNotifierProvider(create: (_) => AdminEventsProvider()),
           ChangeNotifierProvider(create: (_) => AccountStatusProvider()),
+
+          // --- ADMIN EVENTS PROVIDER CON INYECCIÓN DE TOXICIDAD ---
+          ChangeNotifierProvider(
+            create: (_) => AdminEventsProvider(
+              validateText: getIt<ValidateText>(),
+            ),
+          ),
 
           // --- PROVIDERS MIGRADOS CON INYECCIÓN DE DEPENDENCIAS ---
           // Payments Feature

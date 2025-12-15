@@ -33,7 +33,7 @@ import 'package:bienestar_integral_app/features/events/domain/repository/event_r
 import 'package:bienestar_integral_app/features/events/domain/usecase/get_my_event_registrations.dart';
 import 'package:bienestar_integral_app/features/events/domain/usecase/unregister_from_event.dart';
 
-// --- NUEVOS IMPORTS: INGREDIENT ANALYSIS ---
+// --- INGREDIENT ANALYSIS ---
 import 'package:bienestar_integral_app/features/ingredient_analysis/data/datasource/ingredient_analysis_datasource.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/data/repository/ingredient_analysis_repository_impl.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/repository/ingredient_analysis_repository.dart';
@@ -42,6 +42,12 @@ import 'package:bienestar_integral_app/features/ingredient_analysis/domain/useca
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/predict_ingredient_demand.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/train_clustering_model.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/recluster_model.dart';
+
+// --- TOXICITY (NUEVO) ---
+import 'package:bienestar_integral_app/features/toxicity/data/datasource/toxicity_datasource.dart';
+import 'package:bienestar_integral_app/features/toxicity/data/repository/toxicity_repository_impl.dart';
+import 'package:bienestar_integral_app/features/toxicity/domain/repository/toxicity_repository.dart';
+import 'package:bienestar_integral_app/features/toxicity/domain/usecase/validate_text.dart';
 
 final getIt = GetIt.instance;
 
@@ -108,7 +114,7 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton(() => GetMyEventRegistrations(getIt()));
   getIt.registerLazySingleton(() => UnregisterFromEvent(getIt()));
 
-  // --- INGREDIENT ANALYSIS (NUEVO) ---
+  // --- INGREDIENT ANALYSIS ---
   getIt.registerLazySingleton<IngredientAnalysisDatasource>(
         () => IngredientAnalysisDatasourceImpl(client: getIt()),
   );
@@ -121,4 +127,13 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton(() => PredictIngredientDemand(getIt()));
   getIt.registerLazySingleton(() => TrainClusteringModel(getIt()));
   getIt.registerLazySingleton(() => ReclusterModel(getIt()));
+
+  // --- TOXICITY (NUEVO) ---
+  getIt.registerLazySingleton<ToxicityDatasource>(
+        () => ToxicityDatasourceImpl(client: getIt()),
+  );
+  getIt.registerLazySingleton<ToxicityRepository>(
+        () => ToxicityRepositoryImpl(datasource: getIt()),
+  );
+  getIt.registerLazySingleton(() => ValidateText(getIt()));
 }

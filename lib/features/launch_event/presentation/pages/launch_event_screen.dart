@@ -1,3 +1,4 @@
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:bienestar_integral_app/features/admin_home/presentation/providers/admin_events_provider.dart';
 import 'package:bienestar_integral_app/features/admin_home/presentation/providers/admin_home_provider.dart';
 import 'package:bienestar_integral_app/features/auth/presentation/widgets/custom_button.dart';
@@ -106,6 +107,7 @@ class _LaunchEventScreenState extends State<LaunchEventScreen> {
 
       if (mounted) {
         if (success) {
+          // Diálogo de éxito (Mantenemos tu SuccessDialog original o puedes cambiarlo también a AwesomeDialog si prefieres uniformidad)
           showDialog(
             context: context,
             barrierDismissible: false,
@@ -115,12 +117,21 @@ class _LaunchEventScreenState extends State<LaunchEventScreen> {
             ),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(adminEventsProvider.errorMessage ?? 'Error al crear evento'),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
+          // --- AQUÍ ESTÁ EL CAMBIO PARA USAR AWESOME DIALOG ---
+          // Detectamos si es un error de toxicidad o general
+          final errorMessage = adminEventsProvider.errorMessage ?? 'Error desconocido';
+          final isToxicityError = errorMessage.toLowerCase().contains('inapropiado') || errorMessage.toLowerCase().contains('vulgar');
+
+          AwesomeDialog(
+            context: context,
+            dialogType: DialogType.error, // Icono de error (X roja)
+            animType: AnimType.bottomSlide, // Animación desde abajo
+            title: isToxicityError ? 'Lenguaje Inapropiado' : 'Error',
+            desc: errorMessage, // Muestra el mensaje que configuramos en el provider
+            btnOkOnPress: () {}, // Cierra el diálogo
+            btnOkColor: const Color(0xFFD93E46), // Color rojo para el botón
+            btnOkText: 'Entendido',
+          ).show();
         }
       }
     }

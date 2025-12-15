@@ -8,6 +8,8 @@ import 'package:bienestar_integral_app/features/events/domain/usecase/delete_eve
 import 'package:bienestar_integral_app/features/events/domain/usecase/get_event_participants.dart';
 import 'package:bienestar_integral_app/features/events/domain/usecase/get_events_by_kitchen.dart';
 import 'package:bienestar_integral_app/features/events/domain/usecase/update_event.dart';
+// IMPORTAMOS LA VALIDACIÓN DE TEXTO
+import 'package:bienestar_integral_app/features/toxicity/domain/usecase/validate_text.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -20,13 +22,17 @@ class AdminEventsProvider extends ChangeNotifier {
   late final GetEventsByKitchen _getEventsByKitchen;
   late final GetEventParticipants _getEventParticipants;
 
+  // Dependencia Opcional para Toxicidad
+  final ValidateText? _validateText;
+
   AdminEventStatus _status = AdminEventStatus.initial;
   String? _errorMessage;
 
   List<Event> _events = [];
   List<EventParticipant> _participants = [];
 
-  AdminEventsProvider() {
+  // Actualizamos el constructor para aceptar la dependencia opcional
+  AdminEventsProvider({ValidateText? validateText}) : _validateText = validateText {
     final datasource = EventDatasourceImpl(client: http.Client());
     final repository = EventRepositoryImpl(datasource: datasource);
 
@@ -75,6 +81,7 @@ class AdminEventsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // --- LÓGICA MODIFICADA PARA LANZAR EVENTO ---
   Future<bool> launchEvent({
     required int kitchenId,
     required String name,
@@ -92,6 +99,19 @@ class AdminEventsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // 1. Validar Toxicidad si el servicio está disponible
+      if (_validateText != null) {
+        final toxicityResult = await _validateText!(description);
+
+        if (!toxicityResult.permitido) {
+          _errorMessage = "No se pudo lanzar el evento: La descripción contiene lenguaje inapropiado o vulgar.";
+          _status = AdminEventStatus.error;
+          notifyListeners();
+          return false;
+        }
+      }
+
+      // 2. Si pasa el filtro, crear el evento
       final eventData = {
         "kitchenId": kitchenId,
         "name": name,
@@ -148,6 +168,9 @@ class AdminEventsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Nota: También podríamos validar toxicidad al editar, pero lo dejaremos opcional por ahora.
+      // Si quisieras validarlo, copia la lógica del if(_validateText != null) aquí.
+
       final eventData = {
         "name": name,
         "description": description,
