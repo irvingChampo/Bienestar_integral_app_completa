@@ -45,6 +45,7 @@ import 'package:bienestar_integral_app/features/ingredient_analysis/domain/useca
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/recluster_model.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/train_clustering_model.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/presentation/providers/ingredient_analysis_provider.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/get_stored_ingredients.dart'; // IMPORT NUEVO
 
 // 6. Toxicity (Validación de texto)
 import 'package:bienestar_integral_app/features/toxicity/domain/usecase/validate_text.dart';
@@ -59,9 +60,10 @@ Future<void> main() async {
   final appState = AppState();
 
   runApp(
-    DevicePreview(
-      enabled: kDebugMode,
-      builder: (context) => MultiProvider(
+  //  DevicePreview(
+  //    enabled: kDebugMode,
+  //    builder: (context) =>
+          MultiProvider(
         providers: [
           // --- PROVIDERS GLOBALES ESTÁNDAR ---
           ChangeNotifierProvider(create: (_) => appState),
@@ -113,6 +115,7 @@ Future<void> main() async {
               reclusterModel: getIt<ReclusterModel>(),
               predictDemand: getIt<PredictIngredientDemand>(),
               getHistory: getIt<GetIngredientHistory>(),
+              getStoredIngredients: getIt<GetStoredIngredients>(), // NUEVA INYECCIÓN
             ),
           ),
           // Chef IA Feature
@@ -122,6 +125,6 @@ Future<void> main() async {
         ],
         child: const MyApp(),
       ),
-    ),
+  //  ),
   );
 }

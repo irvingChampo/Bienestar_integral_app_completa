@@ -23,8 +23,8 @@ class MyApp extends StatelessWidget {
       routerConfig: appRouter.router,
 
       // --- Comentar para cargar en el telefono ---
-        locale: DevicePreview.locale(context),
-        builder: DevicePreview.appBuilder,
+      //  locale: DevicePreview.locale(context),
+      //  builder: DevicePreview.appBuilder,
       // -----------------------------------------
 
       theme: AppTheme.lightTheme,

@@ -81,7 +81,7 @@ class AdminEventsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- LÓGICA MODIFICADA PARA LANZAR EVENTO ---
+  // --- LÓGICA MODIFICADA PARA LANZAR EVENTO CON DOBLE VALIDACIÓN ---
   Future<bool> launchEvent({
     required int kitchenId,
     required String name,
@@ -99,19 +99,29 @@ class AdminEventsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. Validar Toxicidad si el servicio está disponible
+      // Validar Toxicidad si el servicio está disponible
       if (_validateText != null) {
-        final toxicityResult = await _validateText!(description);
 
-        if (!toxicityResult.permitido) {
-          _errorMessage = "No se pudo lanzar el evento: La descripción contiene lenguaje inapropiado o vulgar.";
+        // 1. Validar el NOMBRE
+        final nameResult = await _validateText!(name);
+        if (!nameResult.permitido) {
+          _errorMessage = "No se pudo lanzar: El nombre del evento contiene lenguaje inapropiado.";
+          _status = AdminEventStatus.error;
+          notifyListeners();
+          return false;
+        }
+
+        // 2. Validar la DESCRIPCIÓN
+        final descResult = await _validateText!(description);
+        if (!descResult.permitido) {
+          _errorMessage = "No se pudo lanzar: La descripción contiene lenguaje inapropiado.";
           _status = AdminEventStatus.error;
           notifyListeners();
           return false;
         }
       }
 
-      // 2. Si pasa el filtro, crear el evento
+      // 3. Si ambos pasan el filtro, crear el evento
       final eventData = {
         "kitchenId": kitchenId,
         "name": name,
@@ -168,8 +178,7 @@ class AdminEventsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Nota: También podríamos validar toxicidad al editar, pero lo dejaremos opcional por ahora.
-      // Si quisieras validarlo, copia la lógica del if(_validateText != null) aquí.
+      // Opcional: Podrías agregar aquí también la validación si deseas que al editar también se revise.
 
       final eventData = {
         "name": name,

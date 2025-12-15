@@ -66,11 +66,13 @@ class AppRouter {
         name: AppRoutes.manageVolunteers,
         builder: (c, s) => const ManageVolunteersScreen(),
       ),
+      // --- Asegúrate de que aquí haya coma al final ---
       GoRoute(
           path: AppRoutes.analysisPath,
           name: AppRoutes.analysis,
           builder: (c, s) => const AnalysisDashboardScreen()
       ),
+      // ----------------------------------------------
       GoRoute(path: AppRoutes.launchEventPath, name: AppRoutes.launchEvent, builder: (c, s) => const LaunchEventScreen()),
       GoRoute(path: AppRoutes.addProductPath, name: AppRoutes.addProduct, builder: (c, s) => const AddProductScreen()),
       GoRoute(path: AppRoutes.inventoryPath, name: AppRoutes.inventory, builder: (c, s) => const InventoryScreen()),
@@ -107,6 +109,7 @@ class AppRouter {
             AppRoutes.accountStatusPath,
             AppRoutes.chefIaPath,
             AppRoutes.editEventPath,
+            AppRoutes.analysisPath, // Asegúrate de incluir la ruta de análisis aquí si es solo para admin
           ].contains(location);
 
       if (authStatus == AuthStatus.unauthenticated) {

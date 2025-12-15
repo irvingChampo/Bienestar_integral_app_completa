@@ -42,8 +42,9 @@ import 'package:bienestar_integral_app/features/ingredient_analysis/domain/useca
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/predict_ingredient_demand.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/train_clustering_model.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/recluster_model.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/domain/usecase/get_stored_ingredients.dart'; // IMPORT NUEVO
 
-// --- TOXICITY (NUEVO) ---
+// --- TOXICITY ---
 import 'package:bienestar_integral_app/features/toxicity/data/datasource/toxicity_datasource.dart';
 import 'package:bienestar_integral_app/features/toxicity/data/repository/toxicity_repository_impl.dart';
 import 'package:bienestar_integral_app/features/toxicity/domain/repository/toxicity_repository.dart';
@@ -127,8 +128,10 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton(() => PredictIngredientDemand(getIt()));
   getIt.registerLazySingleton(() => TrainClusteringModel(getIt()));
   getIt.registerLazySingleton(() => ReclusterModel(getIt()));
+  // NUEVO REGISTRO:
+  getIt.registerLazySingleton(() => GetStoredIngredients(getIt()));
 
-  // --- TOXICITY (NUEVO) ---
+  // --- TOXICITY ---
   getIt.registerLazySingleton<ToxicityDatasource>(
         () => ToxicityDatasourceImpl(client: getIt()),
   );

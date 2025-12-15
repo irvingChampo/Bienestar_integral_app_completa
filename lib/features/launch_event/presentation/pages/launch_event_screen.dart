@@ -92,6 +92,7 @@ class _LaunchEventScreenState extends State<LaunchEventScreen> {
 
       final adminEventsProvider = context.read<AdminEventsProvider>();
 
+      // Aquí se inicia el proceso que incluye la validación de toxicidad
       final success = await adminEventsProvider.launchEvent(
         kitchenId: kitchenId,
         name: _nameController.text.trim(),
@@ -107,7 +108,7 @@ class _LaunchEventScreenState extends State<LaunchEventScreen> {
 
       if (mounted) {
         if (success) {
-          // Diálogo de éxito (Mantenemos tu SuccessDialog original o puedes cambiarlo también a AwesomeDialog si prefieres uniformidad)
+          // Éxito: Mostrar diálogo verde
           showDialog(
             context: context,
             barrierDismissible: false,
@@ -117,19 +118,18 @@ class _LaunchEventScreenState extends State<LaunchEventScreen> {
             ),
           );
         } else {
-          // --- AQUÍ ESTÁ EL CAMBIO PARA USAR AWESOME DIALOG ---
-          // Detectamos si es un error de toxicidad o general
+          // Error (incluyendo Toxicidad): Mostrar AwesomeDialog Rojo
           final errorMessage = adminEventsProvider.errorMessage ?? 'Error desconocido';
           final isToxicityError = errorMessage.toLowerCase().contains('inapropiado') || errorMessage.toLowerCase().contains('vulgar');
 
           AwesomeDialog(
             context: context,
-            dialogType: DialogType.error, // Icono de error (X roja)
-            animType: AnimType.bottomSlide, // Animación desde abajo
+            dialogType: DialogType.error,
+            animType: AnimType.bottomSlide,
             title: isToxicityError ? 'Lenguaje Inapropiado' : 'Error',
-            desc: errorMessage, // Muestra el mensaje que configuramos en el provider
-            btnOkOnPress: () {}, // Cierra el diálogo
-            btnOkColor: const Color(0xFFD93E46), // Color rojo para el botón
+            desc: errorMessage,
+            btnOkOnPress: () {},
+            btnOkColor: const Color(0xFFD93E46),
             btnOkText: 'Entendido',
           ).show();
         }

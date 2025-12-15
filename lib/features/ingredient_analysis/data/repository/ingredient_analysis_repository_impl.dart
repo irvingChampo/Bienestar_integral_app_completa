@@ -1,6 +1,7 @@
 import 'package:bienestar_integral_app/features/ingredient_analysis/data/datasource/ingredient_analysis_datasource.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/entities/dataset_summary.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/entities/ingredient_history.dart';
+import 'package:bienestar_integral_app/features/ingredient_analysis/domain/entities/ingredient_list.dart'; // IMPORT NUEVO
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/entities/prediction_result.dart';
 import 'package:bienestar_integral_app/features/ingredient_analysis/domain/repository/ingredient_analysis_repository.dart';
 
@@ -32,5 +33,11 @@ class IngredientAnalysisRepositoryImpl implements IngredientAnalysisRepository {
   @override
   Future<String> trainModel(int kitchenId) async {
     return await datasource.trainModel(kitchenId);
+  }
+
+  // NUEVA IMPLEMENTACIÓN
+  @override
+  Future<List<IngredientItem>> getIngredients() async {
+    return await datasource.getIngredients();
   }
 }

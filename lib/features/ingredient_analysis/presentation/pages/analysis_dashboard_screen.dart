@@ -20,7 +20,7 @@ class _AnalysisDashboardScreenState extends State<AnalysisDashboardScreen> with 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -55,6 +55,7 @@ class _AnalysisDashboardScreenState extends State<AnalysisDashboardScreen> with 
           tabs: const [
             Tab(text: 'Predicción'),
             Tab(text: 'Evolución'),
+            Tab(text: 'Ingredientes'),
           ],
         ),
       ),
@@ -63,6 +64,7 @@ class _AnalysisDashboardScreenState extends State<AnalysisDashboardScreen> with 
         children: [
           _PredictionView(provider: provider),
           _HistoryView(provider: provider),
+          _IngredientsListView(provider: provider),
         ],
       ),
     );
@@ -81,7 +83,6 @@ class _PredictionView extends StatefulWidget {
 class _PredictionViewState extends State<_PredictionView> {
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers
   final _ingredienteCtrl = TextEditingController(text: "Tomate");
   final _categoriaIdCtrl = TextEditingController(text: "4");
   final _unidadCtrl = TextEditingController(text: "kilogramos");
@@ -91,7 +92,6 @@ class _PredictionViewState extends State<_PredictionView> {
   final _diasCtrl = TextEditingController(text: "7");
 
   void _submit() {
-    // 1. Obtener ID de Cocina
     final kitchenId = context.read<AdminHomeProvider>().kitchen?.id;
 
     if (kitchenId == null) {
@@ -100,7 +100,6 @@ class _PredictionViewState extends State<_PredictionView> {
     }
 
     if (_formKey.currentState!.validate()) {
-      // 2. Conversión Segura de Datos
       try {
         final catId = int.parse(_categoriaIdCtrl.text.trim());
         final cantUni = double.parse(_cantidadUnidadCtrl.text.trim());
@@ -108,7 +107,6 @@ class _PredictionViewState extends State<_PredictionView> {
         final tasa = double.parse(_tasaCtrl.text.trim());
         final dias = int.parse(_diasCtrl.text.trim());
 
-        // 3. Llamada al Provider
         widget.provider.predict(
           kitchenId: kitchenId,
           ingrediente: _ingredienteCtrl.text.trim(),
@@ -270,6 +268,142 @@ class _HistoryViewState extends State<_HistoryView> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+// --- VISTA 3: LISTA DE INGREDIENTES ---
+class _IngredientsListView extends StatefulWidget {
+  final IngredientAnalysisProvider provider;
+  const _IngredientsListView({required this.provider});
+
+  @override
+  State<_IngredientsListView> createState() => _IngredientsListViewState();
+}
+
+class _IngredientsListViewState extends State<_IngredientsListView> {
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.provider.fetchStoredIngredients();
+    });
+  }
+
+  // Lógica para asignar color según la etiqueta
+  Color _getPriorityColor(String etiqueta) {
+    final tag = etiqueta.toUpperCase();
+    if (tag.contains("ALTA")) return Colors.red.shade100;
+    if (tag.contains("MEDIA")) return Colors.orange.shade100;
+    if (tag.contains("BAJA")) return Colors.green.shade100;
+    return Colors.grey.shade100;
+  }
+
+  Color _getPriorityTextColor(String etiqueta) {
+    final tag = etiqueta.toUpperCase();
+    if (tag.contains("ALTA")) return Colors.red.shade900;
+    if (tag.contains("MEDIA")) return Colors.orange.shade900;
+    if (tag.contains("BAJA")) return Colors.green.shade900;
+    return Colors.grey.shade800;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ingredients = widget.provider.ingredients;
+    final isLoading = widget.provider.status == AnalysisStatus.loading;
+    final colors = Theme.of(context).colorScheme;
+
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (ingredients.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.list_alt, size: 60, color: colors.outline),
+            const SizedBox(height: 16),
+            const Text('No hay ingredientes registrados.'),
+            const SizedBox(height: 10),
+            ElevatedButton(
+                onPressed: () => widget.provider.fetchStoredIngredients(),
+                child: const Text("Recargar")
+            )
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () async => await widget.provider.fetchStoredIngredients(),
+      child: ListView.separated(
+        padding: const EdgeInsets.all(20),
+        itemCount: ingredients.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final item = ingredients[index];
+          final colorBg = _getPriorityColor(item.etiqueta);
+          final colorText = _getPriorityTextColor(item.etiqueta);
+
+          return Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                children: [
+                  // Icono a la izquierda
+                  CircleAvatar(
+                    backgroundColor: colors.primaryContainer,
+                    child: Text(
+                      item.ingrediente.isNotEmpty ? item.ingrediente[0].toUpperCase() : '?',
+                      style: TextStyle(color: colors.onPrimaryContainer, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+
+                  // Información Central
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.ingrediente,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        const SizedBox(height: 4),
+                        Text("Cat: ${item.categoriaId} • ${item.unidadMedida}", style: TextStyle(fontSize: 12, color: colors.onSurfaceVariant)),
+                        Text("Creado: ${item.fechaCreacion.split(' ')[0]}", style: TextStyle(fontSize: 11, color: colors.outline)),
+                      ],
+                    ),
+                  ),
+
+                  // Badge de Prioridad a la derecha
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                        color: colorBg,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: colorText.withOpacity(0.3))
+                    ),
+                    child: Text(
+                      item.etiqueta,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: colorText,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
